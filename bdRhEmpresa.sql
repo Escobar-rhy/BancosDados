@@ -239,3 +239,188 @@ INSERT INTO itens_venda (id_venda, id_produto, quantidade, preco_unitario) VALUE
 (28, 23, 1, 420.00),
 (29, 22, 2, 150.00),
 (30, 8, 1, 350.00);
+
+-- ============================================
+-- Consultas básicas
+-- ============================================
+
+-- Listar todos os funcionários que não trabalham em nenhum departamento.
+SELECT * FROM funcionarios
+WHERE id_departamento IS NULL;
+
+-- Listar os funcionários que ganham entre R$ 3.000 e R$ 6.000.
+SELECT * FROM funcionarios
+WHERE salario BETWEEN 3000.00 AND 6000.00
+ORDER BY salario;
+
+-- Exibir os funcionários cujo nome começa com a letra ‘J’.
+SELECT * FROM funcionarios
+WHERE nome LIKE 'J%';
+
+-- Listar todos os produtos da categoria ‘Eletrônicos’ ou ‘Informática’.
+SELECT * FROM produtos
+WHERE categoria IN ('Eletrônicos', 'Informática');
+
+-- Mostrar os clientes que moram em uma cidade que contenha a palavra ‘Santos’.
+SELECT * FROM clientes
+WHERE cidade LIKE '%Santos%';
+
+-- Listar os produtos com estoque entre 10 e 50 unidades.
+SELECT * FROM produtos
+WHERE estoque BETWEEN 10 AND 50
+ORDER BY estoque;
+
+-- Exibir os funcionários contratados após 2020, em ordem decrescente de salário.
+SELECT * FROM funcionarios
+WHERE data_admissao > '2020-12-31'
+ORDER BY salario DESC;
+
+-- Mostrar os 5 funcionários com os maiores salários.
+SELECT * FROM funcionarios
+ORDER BY salario DESC
+LIMIT 5;
+
+-- Listar os produtos cujo nome termina com ‘Pro’.
+-- OBS: Não existe nenhum produto com nome que termina em 'Pro' nos dados de exemplo,
+-- mas a consulta é esta:
+SELECT * FROM produtos
+WHERE nome LIKE '%Pro';
+
+-- Exibir todos os funcionários cujo cargo contém a palavra ‘Analista’.
+SELECT * FROM funcionarios
+WHERE cargo LIKE '%Analista%';
+
+
+-- ============================================
+-- Consultas com funções agregadas
+-- ============================================
+
+-- Mostrar o total de funcionários por departamento.
+SELECT d.nome AS departamento, COUNT(f.id_funcionario) AS total_funcionarios
+FROM departamentos d
+JOIN funcionarios f ON d.id_departamento = f.id_departamento
+GROUP BY d.nome
+ORDER BY total_funcionarios DESC;
+
+-- Exibir o salário médio por departamento.
+SELECT d.nome AS departamento, AVG(f.salario) AS salario_medio
+FROM departamentos d
+JOIN funcionarios f ON d.id_departamento = f.id_departamento
+GROUP BY d.nome
+ORDER BY salario_medio DESC;
+
+-- Exibir o menor e o maior salário da empresa.
+SELECT
+    MIN(salario) AS menor_salario,
+    MAX(salario) AS maior_salario
+FROM funcionarios;
+
+-- Listar apenas os departamentos que possuem mais de 5 funcionários.
+SELECT d.nome AS departamento, COUNT(f.id_funcionario) AS total_funcionarios
+FROM departamentos d
+JOIN funcionarios f ON d.id_departamento = f.id_departamento
+GROUP BY d.nome
+HAVING COUNT(f.id_funcionario) > 5
+ORDER BY total_funcionarios DESC;
+
+-- Exibir a soma total das vendas realizadas em cada mês.
+-- Esta consulta requer uma função de extração de mês, que pode variar (e.g., EXTRACT, MONTHNAME, TO_CHAR).
+-- Usando EXTRACT para ser mais compatível com PostgreSQL ou TO_CHAR para formatação:
+SELECT
+TO_CHAR(data_venda, 'YYYY-MM') AS ano_mes,
+SUM(total) AS soma_total_vendas
+FROM vendas
+GROUP BY ano_mes
+ORDER BY ano_mes;
+
+-- Mostrar o produto mais vendido (com base na soma das quantidades).
+SELECT p.nome AS produto, SUM(iv.quantidade) AS quantidade_total_vendida
+FROM itens_venda iv
+JOIN produtos p ON iv.id_produto = p.id_produto
+GROUP BY p.nome
+ORDER BY quantidade_total_vendida DESC
+LIMIT 1;
+
+-- Exibir o total de vendas por cliente.
+SELECT c.nome AS cliente, SUM(v.total) AS total_comprado
+FROM vendas v
+JOIN clientes c ON v.id_cliente = c.id_cliente
+GROUP BY c.nome
+ORDER BY total_comprado DESC;
+
+-- Listar os departamentos ordenados pelo salário médio decrescente.
+SELECT d.nome AS departamento, AVG(f.salario) AS salario_medio
+FROM departamentos d
+JOIN funcionarios f ON d.id_departamento = f.id_departamento
+GROUP BY d.nome
+ORDER BY salario_medio DESC;
+
+-- Mostrar o número total de funcionários que ganham acima de R$ 8.000.
+SELECT COUNT(id_funcionario) AS total_funcionarios_acima_8k
+FROM funcionarios
+WHERE salario > 8000.00;
+
+-- Exibir o valor médio das vendas com status ‘Concluída’.
+-- OBS: A tabela 'vendas' fornecida não possui uma coluna 'status',
+-- então assumiremos que todas as vendas inseridas estão 'Concluídas'.
+SELECT AVG(total) AS valor_medio_vendas
+FROM vendas;
+
+
+-- ============================================
+-- Consultas com JOINs
+-- ============================================
+
+-- Listar o nome do funcionário e o nome do departamento em que ele trabalha.
+SELECT f.nome AS nome_funcionario, d.nome AS nome_departamento
+FROM funcionarios f
+JOIN departamentos d ON f.id_departamento = d.id_departamento
+ORDER BY nome_departamento, nome_funcionario;
+
+-- OBS: Não existe tabela de 'projetos' ou 'participacao'. 
+-- se houvesse:
+/*
+SELECT p.nome_projeto, f.nome AS nome_funcionario
+FROM projetos p
+JOIN participacao_projeto pp ON p.id_projeto = pp.id_projeto
+JOIN funcionarios f ON pp.id_funcionario = f.id_funcionario;
+*/
+
+-- Exibir as vendas mostrando o nome do cliente e o nome do produto vendido.
+SELECT
+v.id_venda,
+c.nome AS nome_cliente,
+p.nome AS nome_produto,
+iv.quantidade,
+iv.preco_unitario
+FROM vendas v
+JOIN clientes c ON v.id_cliente = c.id_cliente
+JOIN itens_venda iv ON v.id_venda = iv.id_venda
+JOIN produtos p ON iv.id_produto = p.id_produto
+ORDER BY v.id_venda;
+
+-- OBS: Não existe tabela de 'projetos' ou 'alocacao'.
+-- se houvesse:
+/*
+SELECT f.nome AS nome_funcionario, p.nome_projeto
+FROM funcionarios f
+LEFT JOIN alocacao_projeto ap ON f.id_funcionario = ap.id_funcionario
+LEFT JOIN projetos p ON ap.id_projeto = p.id_projeto
+ORDER BY f.nome;
+*/
+
+-- *Adaptação para o contexto existente: Listar o nome do funcionário e o departamento,
+-- incluindo funcionários sem departamento (NULL).
+SELECT f.nome AS nome_funcionario, d.nome AS nome_departamento
+FROM funcionarios f
+LEFT JOIN departamentos d ON f.id_departamento = d.id_departamento
+ORDER BY nome_departamento NULLS FIRST, nome_funcionario;
+
+-- Mostrar o nome dos clientes que compraram produtos da categoria ‘Informática’.
+SELECT DISTINCT c.nome AS nome_cliente
+FROM clientes c
+JOIN vendas v ON c.id_cliente = v.id_cliente
+JOIN itens_venda iv ON v.id_venda = iv.id_venda
+JOIN produtos p ON iv.id_produto = p.id_produto
+WHERE p.categoria = 'Informática'
+ORDER BY c.nome;
