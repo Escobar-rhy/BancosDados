@@ -20,24 +20,23 @@ quantidade INT NOT NULL,
 data_pedido DATE NOT NULL
 );
 
---tarefa 5 
+--tarefa 5 :  Usar alter table para transformar fk_id_cliente em chave estrangeira.
 ALTER TABLE tb_pedidos
 ADD CONSTRAINT fk_pedidos_cliente
 FOREIGN KEY (fk_id_cliente)
 REFERENCES tb_clientes (id_cliente);
 
---tarefa 10
+--tarefa 10 : Comando para buscar apenas produtos com preço acima de R$50,00.
 SELECT *
 FROM tb_produtos
 WHERE preco > 50.00;
 
---tarefa 15
+--tarefa 15 : Criar uma consulta para listar todos os clientes em ordem alfabética do nome de A-Z.
 SELECT *
 FROM tb_clientes
 ORDER BY nome_cliente ASC;
 
---tarefa 20
+--tarefa 20 : Criar uma consulta para lista os produtos com estoque da quantidade maior para a menor.
 SELECT *
 FROM tb_produtos
 ORDER BY estoque DESC;
-
